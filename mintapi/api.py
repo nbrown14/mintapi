@@ -118,6 +118,19 @@ class Mint(requests.Session):
         except RuntimeError:
             raise Exception('Failed to load Mint login page')
 
+            
+        u = 'https://accounts.mint.com/access_client/sign_in'
+        data = {'username': email, 'password': password, 'namespaceId':'50000026'}
+        print data
+        ur = self.post(u, data=data)
+
+        print ur
+        import pprint
+        pprint.pprint(dict(ur.headers))
+        with open('debug.html', 'w') as f:
+            f.write(ur.content)
+
+
         data = {'username': email}
         response = self.post('https://wwws.mint.com/getUserPod.xevent',
                              data=data, headers=self.json_headers).text
@@ -136,6 +149,9 @@ class Mint(requests.Session):
 
         # 2: Grab token.
         self.token = response['sUser']['token']
+        # OAuth
+        response = self.post('https://wwws.mint.com/oauth2.xevent?token='+self.token + '&_='+str(int(time.time()+1000)))
+        self.headers['Authorization'] = response.json()['access_token']
 
     def get_accounts(self, get_detail=False):  # {{{
         # Issue service request.
